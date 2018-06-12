@@ -3,26 +3,47 @@ package org.craftedsw.tripservicekata.trip;
 import org.craftedsw.tripservicekata.exception.UserNotLoggedInException;
 import org.craftedsw.tripservicekata.user.IUserSessionProxy;
 import org.craftedsw.tripservicekata.user.User;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 
+@RunWith(MockitoJUnitRunner.class)
 public class TripServiceTest {
 
+    @Mock
+    private ITripDAOProxy tripDAOProxy;
+
+    @Mock
+    private IUserSessionProxy userSessionProxy;
+
+    @InjectMocks
+    private TripService tripService;
+
     private User currentUser;
+    private User givenUser = new User();
+    private final List<Trip> trips = asList(new Trip());
+
+    @Before
+    public void setUp() {
+        currentUser = new User();
+        given(tripDAOProxy.findTripsByUser(any(User.class))).willReturn(trips);
+        given(userSessionProxy.getLoggedUser()).willReturn(currentUser);
+    }
 
     @Test
     public void getTripsByUser_return_no_trips_when_logged_user_has_no_friends() {
-        // given
-        TripService tripService = new TripService(new FakeDAOProxy(), new FakeUserSessionProxy());
-        User user = new User();
-        currentUser = new User();
-
         // when
-        List<Trip> tripsByUser = tripService.getTripsByUser(user);
+        List<Trip> tripsByUser = tripService.getTripsByUser(givenUser);
 
         // then
         assertThat(tripsByUser).isEmpty();
@@ -31,9 +52,7 @@ public class TripServiceTest {
     @Test
     public void getTripsByUser_return_a_trip_when_logged_user_is_friend_with_given_user() {
         // given
-        TripService tripService = new TripService(new FakeDAOProxy(), new FakeUserSessionProxy());
         User user = new User();
-        currentUser = new User();
         User otherFriend = new User();
         user.addFriend(otherFriend);
         user.addFriend(currentUser);
@@ -48,37 +67,14 @@ public class TripServiceTest {
     @Test(expected = UserNotLoggedInException.class)
     public void getTripsByUser_throws_an_UserNotLoggedInException_when_user_is_not_logged_in() {
         // given
-        TripService tripService = new TripService(new FakeDAOProxy(), new FakeUserSessionProxy());
-        User user = new User();
-        currentUser = null;
+        given(userSessionProxy.getLoggedUser()).willReturn(null);
 
         // when
-        tripService.getTripsByUser(user);
+        tripService.getTripsByUser(new User());
     }
 
     @Test(expected = NullPointerException.class)
     public void getTripsByUser_throws_a_null_pointer_exception_when_given_user_os_null() {
-        // given
-        TripService tripService = new TripService(new FakeDAOProxy(), new FakeUserSessionProxy());
-        currentUser = new User();
-
-        // when
         tripService.getTripsByUser(null);
-    }
-
-    class FakeDAOProxy implements ITripDAOProxy {
-
-        public List<Trip> findTripsByUser(User user) {
-            List<Trip> trips = new ArrayList<Trip>();
-            trips.add(new Trip());
-            return trips;
-        }
-    }
-
-    class FakeUserSessionProxy implements IUserSessionProxy {
-
-        public User getLoggedUser() {
-            return currentUser;
-        }
     }
 }

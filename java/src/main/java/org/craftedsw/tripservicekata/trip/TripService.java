@@ -11,6 +11,7 @@ import java.util.List;
 
 public class TripService {
 
+    private static final ArrayList<Trip> NO_TRIPS = new ArrayList<Trip>();
     private ITripDAOProxy tripDAOProxy;
     private IUserSessionProxy userSessionProxy;
 
@@ -25,27 +26,11 @@ public class TripService {
     }
 
     public List<Trip> getTripsByUser(@NotNull User user) throws UserNotLoggedInException {
-		List<Trip> trips = new ArrayList<Trip>();
-		User currentUser = getLoggedUser();
-		boolean isFriend = false;
-		if (currentUser != null) {
-			for (User friend : user.getFriends()) {
-				if (friend.equals(currentUser)) {
-					isFriend = true;
-					break;
-				}
-			}
-			if (isFriend) {
-                trips = tripDAOProxy.findTripsByUser(user);
-            }
-			return trips;
-		} else {
-			throw new UserNotLoggedInException();
-		}
-	}
+		User currentUser = userSessionProxy.getLoggedUser();
+        if (currentUser == null) {
+            throw new UserNotLoggedInException();
+        }
 
-    protected User getLoggedUser() {
-        return userSessionProxy.getLoggedUser();
-	}
-
+        return user.isFriendWith(currentUser) ? tripDAOProxy.findTripsByUser(user) : NO_TRIPS;
+    }
 }
