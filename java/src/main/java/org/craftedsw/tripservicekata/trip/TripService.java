@@ -1,16 +1,30 @@
 package org.craftedsw.tripservicekata.trip;
 
+import com.sun.istack.internal.NotNull;
+import org.craftedsw.tripservicekata.exception.UserNotLoggedInException;
+import org.craftedsw.tripservicekata.user.IUserSessionProxy;
+import org.craftedsw.tripservicekata.user.User;
+import org.craftedsw.tripservicekata.user.UserSessionProxy;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import com.sun.istack.internal.NotNull;
-import org.craftedsw.tripservicekata.exception.UserNotLoggedInException;
-import org.craftedsw.tripservicekata.user.User;
-import org.craftedsw.tripservicekata.user.UserSession;
-
 public class TripService {
 
-	public List<Trip> getTripsByUser(@NotNull User user) throws UserNotLoggedInException {
+    private ITripDAOProxy tripDAOProxy;
+    private IUserSessionProxy userSessionProxy;
+
+    public TripService() {
+        this.tripDAOProxy = new TripDAOProxy();
+        this.userSessionProxy = new UserSessionProxy();
+    }
+
+    public TripService(ITripDAOProxy tripDAOProxy, IUserSessionProxy userSessionProxy) {
+        this.tripDAOProxy = tripDAOProxy;
+        this.userSessionProxy = userSessionProxy;
+    }
+
+    public List<Trip> getTripsByUser(@NotNull User user) throws UserNotLoggedInException {
 		List<Trip> trips = new ArrayList<Trip>();
 		User currentUser = getLoggedUser();
 		boolean isFriend = false;
@@ -22,7 +36,7 @@ public class TripService {
 				}
 			}
 			if (isFriend) {
-                trips = fetchTripsByUser(user);
+                trips = tripDAOProxy.findTripsByUser(user);
             }
 			return trips;
 		} else {
@@ -30,12 +44,8 @@ public class TripService {
 		}
 	}
 
-    protected List<Trip> fetchTripsByUser(User user) {
-        return TripDAO.findTripsByUser(user);
-    }
-
     protected User getLoggedUser() {
-		return UserSession.getInstance().getLoggedUser();
+        return userSessionProxy.getLoggedUser();
 	}
 
 }

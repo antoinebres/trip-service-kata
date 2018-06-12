@@ -1,6 +1,7 @@
 package org.craftedsw.tripservicekata.trip;
 
 import org.craftedsw.tripservicekata.exception.UserNotLoggedInException;
+import org.craftedsw.tripservicekata.user.IUserSessionProxy;
 import org.craftedsw.tripservicekata.user.User;
 import org.junit.Test;
 
@@ -16,7 +17,7 @@ public class TripServiceTest {
     @Test
     public void getTripsByUser_return_no_trips_when_logged_user_has_no_friends() {
         // given
-        TripService tripService = new TestableTripService();
+        TripService tripService = new TripService(new FakeDAOProxy(), new FakeUserSessionProxy());
         User user = new User();
         currentUser = new User();
 
@@ -30,7 +31,7 @@ public class TripServiceTest {
     @Test
     public void getTripsByUser_return_a_trip_when_logged_user_is_friend_with_given_user() {
         // given
-        TripService tripService = new TestableTripService();
+        TripService tripService = new TripService(new FakeDAOProxy(), new FakeUserSessionProxy());
         User user = new User();
         currentUser = new User();
         User otherFriend = new User();
@@ -47,7 +48,7 @@ public class TripServiceTest {
     @Test(expected = UserNotLoggedInException.class)
     public void getTripsByUser_throws_an_UserNotLoggedInException_when_user_is_not_logged_in() {
         // given
-        TripService tripService = new TestableTripService();
+        TripService tripService = new TripService(new FakeDAOProxy(), new FakeUserSessionProxy());
         User user = new User();
         currentUser = null;
 
@@ -58,25 +59,26 @@ public class TripServiceTest {
     @Test(expected = NullPointerException.class)
     public void getTripsByUser_throws_a_null_pointer_exception_when_given_user_os_null() {
         // given
-        TripService tripService = new TestableTripService();
+        TripService tripService = new TripService(new FakeDAOProxy(), new FakeUserSessionProxy());
         currentUser = new User();
 
         // when
         tripService.getTripsByUser(null);
     }
 
-    class TestableTripService extends TripService {
+    class FakeDAOProxy implements ITripDAOProxy {
 
-        @Override
-        protected User getLoggedUser() {
-            return currentUser;
-        }
-
-        @Override
-        protected List<Trip> fetchTripsByUser(User user) {
+        public List<Trip> findTripsByUser(User user) {
             List<Trip> trips = new ArrayList<Trip>();
             trips.add(new Trip());
             return trips;
+        }
+    }
+
+    class FakeUserSessionProxy implements IUserSessionProxy {
+
+        public User getLoggedUser() {
+            return currentUser;
         }
     }
 }
