@@ -8,12 +8,15 @@ import org.junit.Test;
 
 import java.util.*;
 
+import static org.craftedsw.tripservicekata.trip.UserBuilder.aUser;
+
 public class TripServiceTest {
     private static final Trip TO_BRAZIL = new Trip();
     private static final Trip TO_LONDON = new Trip();
     private static final User ANOTHER_USER = new User();
     private User loggedUser;
     private User GUEST = null;
+    private User UNUSED_USER = new User();
     private User REGISTERED_USER = new User();
     private TripService tripService;
 
@@ -27,11 +30,9 @@ public class TripServiceTest {
     public void shouldTrowAnExceptionWhenUserNotLoggedIn() throws Exception {
         // Given
         loggedUser = GUEST;
-        User user = new User();
-        TripService tripService = new TestableTripService();
 
         // When
-        tripService.getTripsByUser(user);
+        tripService.getTripsByUser(UNUSED_USER);
 
         // Then
 
@@ -40,9 +41,10 @@ public class TripServiceTest {
     @Test
     public void shouldReturnNoTripsWhenUserAreNotFriends() throws Exception {
         // Given
-        User notAFriend = new User();
-        notAFriend.addTrip(TO_BRAZIL);
-        TripService tripService = new TestableTripService();
+        User notAFriend = aUser()
+                .friendsWith(ANOTHER_USER)
+                .withTrips(TO_BRAZIL)
+                .build();
 
         // When
         List<Trip> friendTrips = tripService.getTripsByUser(notAFriend);
@@ -54,13 +56,10 @@ public class TripServiceTest {
     @Test
     public void shouldReturnTripsWhenUserAreFriends() throws Exception {
         // Given
-        User aFriend = new User();
-        aFriend.addFriend(ANOTHER_USER);
-        aFriend.addFriend(loggedUser);
-        aFriend.addTrip(TO_BRAZIL);
-        aFriend.addTrip(TO_LONDON);
-        TripService tripService = new TestableTripService();
-
+        User aFriend = aUser()
+                .friendsWith(ANOTHER_USER, loggedUser)
+                .withTrips(TO_LONDON, TO_BRAZIL)
+                .build();
 
         // When
         List<Trip> friendTrips = tripService.getTripsByUser(aFriend);
@@ -80,5 +79,6 @@ public class TripServiceTest {
             return user.trips();
         }
     }
+
 
 }
