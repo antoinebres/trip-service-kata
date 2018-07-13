@@ -5,7 +5,11 @@ import java.util.List;
 import org.craftedsw.tripservicekata.exception.CollaboratorCallException;
 import org.craftedsw.tripservicekata.user.User;
 
-public class TripDAO {
+public class TripDAO implements ITripDAO{
+
+	public List<Trip> tripsBy(User user){
+		return findTripsByUser(user);
+	}
 
 	public static List<Trip> findTripsByUser(User user) {
 		throw new CollaboratorCallException(
